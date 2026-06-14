@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIFA STREAM - Live Football</title>
+<meta name="description" content="Free live football streaming">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{
+  font-family:'Inter',-apple-system,sans-serif;
+  background:#08080d;
+  color:#eee;
+  min-height:100vh;
+}
+header{
+  background:#0e0e16;
+  border-bottom:1px solid #1a1a26;
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+header h1{font-size:1.3rem;font-weight:800;letter-spacing:-.5px}
+header h1 span{color:#4ea3ff}
+header .nav-btns{display:flex;gap:6px}
+header .nav-btns button{
+  background:#1a1a26;color:#aaa;border:1px solid #2a2a3a;
+  padding:6px 12px;border-radius:6px;font-size:.75rem;font-weight:600;
+  cursor:pointer;transition:.15s
+}
+header .nav-btns button:hover{background:#2a2a3a;color:#fff}
+header .nav-btns button.on{background:#4ea3ff;color:#000;border-color:#4ea3ff}
+
+.filters{
+  display:flex;flex-wrap:wrap;gap:6px;
+  padding:10px 16px;
+  background:#0a0a12;
+  border-bottom:1px solid #1a1a26;
+}
+.filters input,.filters select{
+  flex:1;min-width:120px;padding:8px 10px;
+  border-radius:6px;border:1px solid #2a2a3a;
+  background:#12121c;color:#eee;font-size:.8rem;outline:none
+}
+.filters input:focus,.filters select:focus{border-color:#4ea3ff}
+.filters input::placeholder{color:#555}
+
+.ad-slot{
+  margin:10px 16px;
+  padding:20px;
+  background:#0e0e16;
+  border:1px dashed #2a2a3a;
+  border-radius:8px;
+  text-align:center;
+  color:#444;
+  font-size:.75rem;
+  min-height:60px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+main{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding:0 16px 60px;
+  max-width:1400px;
+  margin:0 auto;
+}
+
+.player-wrap{
+  background:#0e0e16;
+  border:1px solid #1a1a26;
+  border-radius:10px;
+  overflow:hidden;
+}
+.player-wrap .p-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid #1a1a26
+}
+.player-wrap .p-head h3{font-size:.85rem;font-weight:600;color:#aaa}
+.player-wrap .p-head .close{
+  background:none;border:none;color:#555;font-size:1.1rem;cursor:pointer;
+  padding:2px 8px;border-radius:4px;
+}
+.player-wrap .p-head .close:hover{color:#fff;background:#1a1a26}
+.player-wrap iframe{
+  width:100%;aspect-ratio:16/9;border:none;display:block;
+  background:#000;
+}
+
+.list-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0 8px
+}
+.list-header h2{font-size:1rem;font-weight:700}
+.list-header .cnt{font-size:.75rem;color:#666}
+
+.list{display:flex;flex-direction:column;gap:8px}
+
+.match{
+  background:#0e0e16;
+  border:1px solid #1a1a26;
+  border-radius:10px;
+  padding:12px 14px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  transition:.15s;
+  cursor:pointer;
+}
+.match:hover{border-color:#2a2a3a;background:#11111c}
+.match.live{border-color:#ff3333}
+.match.off{opacity:.4}
+
+.match .logos{
+  display:flex;flex-direction:column;align-items:center;gap:4px;min-width:36px;
+}
+.match .logos img{width:30px;height:30px;object-fit:contain}
+.match .logos .vs{font-size:.6rem;font-weight:700;color:#555}
+
+.match .info{flex:1;min-width:0}
+.match .info h3{font-size:.9rem;font-weight:700}
+.match .info .league{font-size:.7rem;color:#777;margin:1px 0}
+.match .info .time{font-size:.75rem;color:#4ea3ff;font-weight:600}
+.match .info .status{
+  display:inline-block;font-size:.65rem;font-weight:700;
+  padding:1px 7px;border-radius:3px;margin-top:4px
+}
+.status.live-box{background:#ff3333;color:#fff;animation:pulse 1.5s infinite}
+.status.soon-box{background:#ff8800;color:#fff}
+.status.end-box{background:#1a1a26;color:#666}
+@keyframes pulse{0%,50%{opacity:1}50%{opacity:.5}}
+.match .viewers{
+  font-size:.65rem;color:#888;margin-top:2px
+}
+
+.match .watch-btn{
+  padding:8px 16px;border-radius:6px;border:none;
+  background:#4ea3ff;color:#000;font-weight:700;font-size:.75rem;
+  cursor:pointer;white-space:nowrap;transition:.12s;
+}
+.match .watch-btn:hover{background:#3d8ae0}
+.match.off .watch-btn{background:#2a2a3a;color:#666;pointer-events:none}
+
+.ad-sticky{position:fixed;bottom:0;left:0;right:0;background:#0e0e16;border-top:1px solid #1a1a26;padding:8px 16px;text-align:center;z-index:99;font-size:.7rem;color:#444}
+
+.loading{
+  text-align:center;padding:48px 16px;color:#555;font-size:.85rem
+}
+.loading .spinner{
+  width:24px;height:24px;border:2px solid #2a2a3a;border-top-color:#4ea3ff;
+  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(min-width:900px){
+  main{flex-direction:row;align-items:flex-start}
+  .player-wrap{flex:2;position:sticky;top:70px}
+  .sidebar{flex:1;max-height:calc(100vh-90px);overflow-y:auto}
+}
+@media(max-width:500px){
+  .match{padding:10px;gap:8px}
+  .match .logos img{width:24px;height:24px}
+  .match .watch-btn{padding:6px 12px;font-size:.7rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>FIFA <span>STREAM</span></h1>
+  <div class="nav-btns">
+    <button onclick="setFilter('all')" class="on" id="fbAll">All</button>
+    <button onclick="setFilter('live')" id="fbLive">Live</button>
+  </div>
+</header>
+
+<div class="filters">
+  <input id="q" type="text" placeholder="Search team..." oninput="render()">
+  <select id="lFilter" onchange="render()">
+    <option value="all">All Competitions</option>
+  </select>
+</div>
+
+<div class="ad-slot">[ AD SPACE 728x90 ]</div>
+
+<main>
+  <section class="player-wrap" id="playerWrap" style="display:none;">
+    <div class="p-head">
+      <h3 id="nowPlaying">Select a match</h3>
+      <button class="close" onclick="closePlayer()">&times;</button>
+    </div>
+    <iframe id="player" src="" allowfullscreen></iframe>
+  </section>
+
+  <div class="sidebar">
+    <div class="list-header">
+      <h2>Matches</h2>
+      <span class="cnt" id="mc">0</span>
+    </div>
+    <div id="list"></div>
+  </div>
+</main>
+
+<div class="ad-sticky">[ AD SPACE - STICKY BANNER ]</div>
+
+<script>
+const API = 'https://api.sportsrc.org/'
+
+let matches = []
+let filter = 'all'
+let currentSources = []
+
+function matchStatus(m){
+  const now=Date.now(),s=m.date,e=m.date+7200000
+  return now>e?'end':now>=s?'live':'soon'
+}
+function fmt(d){return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+
+async function loadMatches(){
+  document.getElementById('list').innerHTML='<div class="loading"><div class="spinner"></div>Loading matches...</div>'
+  try{
+    const r=await fetch(API+'?data=matches&category=football')
+    const j=await r.json()
+    if(j.success)matches=j.data
+  }catch(e){matches=[]}
+  render()
+}
+
+function render(){
+  const q=document.getElementById('q').value.toLowerCase().trim()
+  let ms=matches.filter(m=>{
+    if(filter==='live'&&matchStatus(m)!=='live')return false
+    if(q&&!m.title.toLowerCase().includes(q))return false
+    return true
+  })
+  document.getElementById('mc').textContent=ms.length+' match'+(ms.length!==1?'es':'')
+  const el=document.getElementById('list')
+  if(!ms.length){
+    el.innerHTML='<div style="padding:40px;text-align:center;color:#555;font-size:.85rem">No matches</div>'
+    return
+  }
+  el.innerHTML=ms.map(m=>{
+    const s=matchStatus(m)
+    const lbl=s==='live'?'LIVE':s==='soon'?'Upcoming':'Ended'
+    const cls=s==='live'?'live':s==='end'?'off':''
+    const slbl=s==='live'?'live-box':s==='soon'?'soon-box':'end-box'
+    const home=m.teams?.home?.name||'',away=m.teams?.away?.name||''
+    const hb=m.teams?.home?.badge||'',ab=m.teams?.away?.badge||''
+    return `<div class="match ${cls}" onclick="playMatch('${m.id}','${m.title}')">
+      <div class="logos">
+        <img src="${hb}" alt="${home}" loading="lazy" onerror="this.style.display='none'">
+        <span class="vs">VS</span>
+        <img src="${ab}" alt="${away}" loading="lazy" onerror="this.style.display='none'">
+      </div>
+      <div class="info">
+        <h3>${m.title}</h3>
+        <div class="time">${fmt(m.date)}</div>
+        <span class="status ${slbl}">${lbl}</span>
+        ${m.viewers!==undefined?`<div class="viewers">${m.viewers.toLocaleString()} watching</div>`:''}
+      </div>
+      ${s!=='end'?`<button class="watch-btn" onclick="event.stopPropagation();playMatch('${m.id}','${m.title}')">Watch</button>`:''}
+    </div>`
+  }).join('')
+}
+
+function setFilter(f){
+  filter=f
+  document.querySelectorAll('.nav-btns button').forEach(b=>b.classList.remove('on'))
+  document.getElementById(f==='all'?'fbAll':'fbLive').classList.add('on')
+  render()
+}
+
+function showPlayer(url,title){
+  document.getElementById('playerWrap').style.display='block'
+  document.getElementById('player').src=url
+  document.getElementById('nowPlaying').textContent=title
+}
+
+function closePlayer(){
+  document.getElementById('playerWrap').style.display='none'
+  document.getElementById('player').src=''
+}
+
+async function playMatch(id,title){
+  const el=document.getElementById('list')
+  const idx=matches.findIndex(m=>m.id===id)
+  if(idx>-1)el.children[idx].scrollIntoView({behavior:'smooth',block:'center'})
+
+  try{
+    const r=await fetch(API+`?data=detail&category=football&id=${id}`)
+    const j=await r.json()
+    if(!j.success||!j.data.sources||!j.data.sources.length){
+      alert('No streams available for this match yet.')
+      return
+    }
+    currentSources=j.data.sources
+    // Get the best stream (HD, first one)
+    const best=currentSources.find(s=>s.hd)||currentSources[0]
+    showPlayer(best.embedUrl+'?autoplay=1',title+' — '+best.language)
+  }catch(e){
+    alert('Failed to load stream. Try again.')
+  }
+}
+
+loadMatches()
+setInterval(render,60000)
+</script>
+</body>
+</html>
