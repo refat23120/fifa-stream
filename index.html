@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIFA STREAM - Live Football</title>
+<meta name="description" content="Free live football streaming">
+<link rel="preconnect" href="https://static.flashscore.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{
+  font-family:'Inter',-apple-system,sans-serif;
+  background:#08080d;
+  color:#eee;
+  min-height:100vh;
+}
+header{
+  background:#0e0e16;
+  border-bottom:1px solid #1a1a26;
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+header h1{font-size:1.3rem;font-weight:800;letter-spacing:-.5px}
+header h1 span{color:#4ea3ff}
+header .nav-btns{display:flex;gap:6px}
+header .nav-btns button{
+  background:#1a1a26;color:#aaa;border:1px solid #2a2a3a;
+  padding:6px 12px;border-radius:6px;font-size:.75rem;font-weight:600;
+  cursor:pointer;transition:.15s
+}
+header .nav-btns button:hover{background:#2a2a3a;color:#fff}
+header .nav-btns button.on{background:#4ea3ff;color:#000;border-color:#4ea3ff}
+
+.filters{
+  display:flex;flex-wrap:wrap;gap:6px;
+  padding:10px 16px;
+  background:#0a0a12;
+  border-bottom:1px solid #1a1a26;
+}
+.filters input,.filters select{
+  flex:1;min-width:120px;padding:8px 10px;
+  border-radius:6px;border:1px solid #2a2a3a;
+  background:#12121c;color:#eee;font-size:.8rem;outline:none
+}
+.filters input:focus,.filters select:focus{border-color:#4ea3ff}
+.filters input::placeholder{color:#555}
+
+.ad-slot{
+  margin:10px 16px;
+  padding:20px;
+  background:#0e0e16;
+  border:1px dashed #2a2a3a;
+  border-radius:8px;
+  text-align:center;
+  color:#444;
+  font-size:.75rem;
+  min-height:60px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.container{max-width:1100px;margin:0 auto;padding:0 16px 60px}
+
+.list-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0 8px
+}
+.list-header h2{font-size:1rem;font-weight:700}
+.list-header .cnt{font-size:.75rem;color:#666}
+
+.list{display:flex;flex-direction:column;gap:8px}
+
+.match{
+  background:#0e0e16;
+  border:1px solid #1a1a26;
+  border-radius:10px;
+  padding:12px 14px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  transition:.15s;
+}
+.match:hover{border-color:#2a2a3a;background:#11111c}
+.match.off{opacity:.4}
+.match.live{border-color:#ff3333}
+
+.match .logos{
+  display:flex;flex-direction:column;align-items:center;gap:4px;min-width:36px;
+}
+.match .logos img{width:30px;height:30px;object-fit:contain}
+.match .logos .vs{font-size:.6rem;font-weight:700;color:#555}
+
+.match .info{flex:1;min-width:0}
+.match .info h3{font-size:.9rem;font-weight:700}
+.match .info .league{font-size:.7rem;color:#777;margin:1px 0}
+.match .info .time{font-size:.75rem;color:#4ea3ff;font-weight:600}
+.match .info .status{
+  display:inline-block;font-size:.65rem;font-weight:700;
+  padding:1px 7px;border-radius:3px;margin-top:3px
+}
+.status.live-box{background:#ff3333;color:#fff;animation:pulse 1.5s infinite}
+.status.soon-box{background:#ff8800;color:#fff}
+.status.end-box{background:#1a1a26;color:#666}
+@keyframes pulse{0%,50%{opacity:1}50%{opacity:.5}}
+
+.match .info .channels{
+  display:flex;flex-wrap:wrap;gap:3px;margin-top:5px
+}
+.match .info .channels span{
+  padding:3px 8px;border-radius:3px;border:1px solid #2a2a3a;
+  background:#14141e;color:#999;font-size:.65rem;cursor:pointer;transition:.12s;
+}
+.match .info .channels span:hover{background:#2a2a3a;color:#fff}
+
+.match .watch-btn{
+  padding:8px 16px;border-radius:6px;border:none;
+  background:#4ea3ff;color:#000;font-weight:700;font-size:.75rem;
+  cursor:pointer;white-space:nowrap;transition:.12s;
+}
+.match .watch-btn:hover{background:#3d8ae0}
+.match.off .watch-btn{background:#2a2a3a;color:#666;pointer-events:none}
+
+.ad-sticky{position:fixed;bottom:0;left:0;right:0;background:#0e0e16;border-top:1px solid #1a1a26;padding:8px 16px;text-align:center;z-index:99;font-size:.7rem;color:#444}
+
+/* MODAL */
+.modal-overlay{
+  display:none;
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,.85);
+  z-index:200;
+  align-items:center;
+  justify-content:center;
+}
+.modal-overlay.show{display:flex}
+.modal{
+  background:#11111c;
+  border:1px solid #2a2a3a;
+  border-radius:12px;
+  width:90%;max-width:420px;
+  padding:20px;
+}
+.modal .mhead{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px
+}
+.modal .mhead h3{font-size:1rem}
+.modal .mhead .x{background:none;border:none;color:#666;font-size:1.3rem;cursor:pointer;padding:0 4px}
+.modal .mhead .x:hover{color:#fff}
+.modal .mad{min-height:80px;margin:8px 0;padding:12px;background:#0a0a12;border-radius:8px;text-align:center;color:#444;font-size:.75rem;display:flex;align-items:center;justify-content:center}
+.modal .sbtn{
+  display:block;width:100%;padding:12px;margin-bottom:6px;
+  background:#1a1a26;border:1px solid #2a2a3a;border-radius:8px;
+  color:#eee;font-size:.85rem;font-weight:600;cursor:pointer;text-align:center;
+  transition:.12s;
+}
+.modal .sbtn:hover{background:#2a2a3a;border-color:#4ea3ff}
+.modal .sbtn .lang{color:#4ea3ff;font-weight:700}
+
+@media(max-width:500px){
+  .match{padding:10px;gap:8px}
+  .match .logos img{width:24px;height:24px}
+  .match .watch-btn{padding:6px 12px;font-size:.7rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>FIFA <span>STREAM</span></h1>
+  <div class="nav-btns">
+    <button onclick="setFilter('all')" class="on" id="fbAll">All</button>
+    <button onclick="setFilter('live')" id="fbLive">Live</button>
+  </div>
+</header>
+
+<div class="filters">
+  <input id="q" type="text" placeholder="Search team..." oninput="render()">
+  <select id="lFilter" onchange="render()">
+    <option value="all">All Competitions</option>
+  </select>
+</div>
+
+<div class="ad-slot">[ AD SPACE 728x90 ]</div>
+
+<div class="container">
+  <div class="list-header">
+    <h2>Matches</h2>
+    <span class="cnt" id="mc">0</span>
+  </div>
+  <div class="list" id="list"></div>
+</div>
+
+<div class="ad-sticky">[ AD SPACE - STICKY BANNER ]</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="mhead">
+      <h3 id="modalTitle">Match</h3>
+      <button class="x" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="mad">[ AD SPACE ]</div>
+    <div id="modalStreams"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+//  CONFIG — Direct stream URLs (no proxy needed)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const STREAMS = {
+  fr:    { label: 'French',        url: 'https://www.seizetheday.sbs/channel/vtv3.html' },
+  vi:    { label: 'Vietnamese',    url: 'https://www.seizetheday.sbs/channel/vtv22.html' },
+  cn:    { label: 'Mandarin',      url: 'https://www.seizetheday.sbs/channel/vtv2.html' },
+  en:    { label: 'English HD',    url: 'https://www.seizetheday.sbs/channel/vtv1.html' },
+  multi: { label: 'Multi-Channel', url: 'https://www.seizetheday.sbs/channel/vtv.html' },
+}
+
+const DEFAULT_STREAM = STREAMS.fr
+
+const MATCH_STREAMS = {
+  1: ['fr','vi','cn','en','multi'],
+  2: ['vi'], 3: ['vi'], 4: ['vi'], 5: ['vi'],
+  6: ['vi'], 7: ['vi'], 8: ['vi'], 9: ['vi'],
+  10: ['vi'], 11: ['vi'], 12: ['vi'], 13: ['vi'],
+  14: ['vi'], 15: ['vi'], 16: ['vi'], 17: ['vi'],
+  18: ['vi'], 19: ['vi'], 20: ['vi'],
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  MATCH DATA
+// ═══════════════════════════════════════════════════════════════════════════
+
+const MATCHES = [
+  {id:1,sport:'Football',league:'World Championship',round:'Round 1',home:'Brazil',away:'Morocco',homeLogo:'https://static.flashscore.com/res/image/data/hCaVxehl-88LAtdNt.png',awayLogo:'https://static.flashscore.com/res/image/data/byRvSVil-hOurGDLS.png',date:'2026-06-14T05:00:00+07:00',end:'2026-06-14T07:15:00+07:00'},
+  {id:2,sport:'Football',league:'World Championship',round:'Round 1',home:'Haiti',away:'Scotland',homeLogo:'https://static.flashscore.com/res/image/data/OzGon6Da-GY05WHbt.png',awayLogo:'https://static.flashscore.com/res/image/data/lf3kdFwS-lfZlm1uk.png',date:'2026-06-14T08:00:00+07:00',end:'2026-06-14T10:15:00+07:00'},
+  {id:3,sport:'Football',league:'World Championship',round:'Round 1',home:'Australia',away:'Turkey',homeLogo:'https://static.flashscore.com/res/image/data/Ygu7zgHG-YNb3oHYR.png',awayLogo:'https://static.flashscore.com/res/image/data/Q7zzy7HG-Cfuwb3yH.png',date:'2026-06-14T11:00:00+07:00',end:'2026-06-14T13:15:00+07:00'},
+  {id:4,sport:'Football',league:'World Championship',round:'Round 1',home:'Germany',away:'Curacao',homeLogo:'https://static.flashscore.com/res/image/data/zP226aXg-fB4vYUZp.png',awayLogo:'https://static.flashscore.com/res/image/data/bJ37l5f5-dERAD3h1.png',date:'2026-06-15T00:00:00+07:00',end:'2026-06-15T02:15:00+07:00'},
+  {id:5,sport:'Football',league:'World Championship',round:'Round 1',home:'Netherlands',away:'Japan',homeLogo:'https://static.flashscore.com/res/image/data/bieizLjl-fazrR153.png',awayLogo:'https://static.flashscore.com/res/image/data/Crg4NaGG-ALs6yNah.png',date:'2026-06-15T03:00:00+07:00',end:'2026-06-15T05:15:00+07:00'},
+  {id:6,sport:'Football',league:'World Championship',round:'Round 1',home:'Ivory Coast',away:'Ecuador',homeLogo:'https://static.flashscore.com/res/image/data/SQgULDCr-zTSy144G.png',awayLogo:'https://static.flashscore.com/res/image/data/Qkovv0wS-IPF97VQ3.png',date:'2026-06-15T06:00:00+07:00',end:'2026-06-15T08:15:00+07:00'},
+  {id:7,sport:'Football',league:'World Championship',round:'Round 1',home:'Sweden',away:'Tunisia',homeLogo:'https://static.flashscore.com/res/image/data/b7TlfQBr-Uywods6T.png',awayLogo:'https://static.flashscore.com/res/image/data/SjHXYWzS-SGdPrEJa.png',date:'2026-06-15T09:00:00+07:00',end:'2026-06-15T11:15:00+07:00'},
+  {id:8,sport:'Football',league:'World Championship',round:'Round 1',home:'Spain',away:'Cape Verde',homeLogo:'https://static.flashscore.com/res/image/data/Od7JGXZA-0E8Iihe1.png',awayLogo:'https://static.flashscore.com/res/image/data/dSMzlcyS-GvK8wiCN.png',date:'2026-06-15T23:00:00+07:00',end:'2026-06-16T01:15:00+07:00'},
+  {id:9,sport:'Football',league:'World Championship',round:'Round 1',home:'Belgium',away:'Egypt',homeLogo:'https://static.flashscore.com/res/image/data/Qur1J5jl-dtrVaP64.png',awayLogo:'https://static.flashscore.com/res/image/data/SnO3j6HG-tY1cOGyQ.png',date:'2026-06-16T02:00:00+07:00',end:'2026-06-16T04:15:00+07:00'},
+  {id:10,sport:'Football',league:'World Championship',round:'Round 1',home:'Saudi Arabia',away:'Uruguay',homeLogo:'https://static.flashscore.com/res/image/data/G6x4A5zB-KtpTLRpL.png',awayLogo:'https://static.flashscore.com/res/image/data/ddzsJgf5-WdZ4jMrq.png',date:'2026-06-16T05:00:00+07:00',end:'2026-06-16T07:15:00+07:00'},
+  {id:11,sport:'Football',league:'World Championship',round:'Round 1',home:'Iran',away:'New Zealand',homeLogo:'https://static.flashscore.com/res/image/data/E71I3ig5-vHwNhhf2.png',awayLogo:'https://static.flashscore.com/res/image/data/Q1WkZDyS-zmDbXBOa.png',date:'2026-06-16T08:00:00+07:00',end:'2026-06-16T10:15:00+07:00'},
+  {id:12,sport:'Football',league:'World Championship',round:'Round 1',home:'France',away:'Senegal',homeLogo:'https://static.flashscore.com/res/image/data/I5PqTkcM-U3HPIwDq.png',awayLogo:'https://static.flashscore.com/res/image/data/fPLyMNGG-lQcLqf4g.png',date:'2026-06-17T02:00:00+07:00',end:'2026-06-17T04:15:00+07:00'},
+  {id:13,sport:'Football',league:'World Championship',round:'Round 1',home:'Iraq',away:'Norway',homeLogo:'https://static.flashscore.com/res/image/data/CbiRFhYA-4EsvakLH.png',awayLogo:'https://static.flashscore.com/res/image/data/MZeV1VdM-8doAmYTm.png',date:'2026-06-17T05:00:00+07:00',end:'2026-06-17T07:15:00+07:00'},
+  {id:14,sport:'Football',league:'World Championship',round:'Round 1',home:'Argentina',away:'Algeria',homeLogo:'https://static.flashscore.com/res/image/data/xQCUe9zB-AmY8ktbk.png',awayLogo:'https://static.flashscore.com/res/image/data/OGRs7nwS-YFbDUeTh.png',date:'2026-06-17T08:00:00+07:00',end:'2026-06-17T10:15:00+07:00'},
+  {id:15,sport:'Football',league:'World Championship',round:'Round 1',home:'Austria',away:'Jordan',homeLogo:'https://static.flashscore.com/res/image/data/p2STPgdM-6cnthjRG.png',awayLogo:'https://static.flashscore.com/res/image/data/4nL6jkg5-2cyWyYGn.png',date:'2026-06-17T11:00:00+07:00',end:'2026-06-17T13:15:00+07:00'},
+  {id:16,sport:'Football',league:'World Championship',round:'Round 1',home:'Portugal',away:'D.R. Congo',homeLogo:'https://static.flashscore.com/res/image/data/IBvrXaZg-vZG58BBc.png',awayLogo:'https://static.flashscore.com/res/image/data/8YIXSkBr-YFbDUeTh.png',date:'2026-06-18T00:00:00+07:00',end:'2026-06-18T02:15:00+07:00'},
+  {id:17,sport:'Football',league:'World Championship',round:'Round 1',home:'England',away:'Croatia',homeLogo:'https://static.flashscore.com/res/image/data/tCG9KQYA-Iyld3bDd.png',awayLogo:'https://static.flashscore.com/res/image/data/KMZkYbwS-Gff8fOAh.png',date:'2026-06-18T03:00:00+07:00',end:'2026-06-18T05:15:00+07:00'},
+  {id:18,sport:'Football',league:'World Championship',round:'Round 1',home:'Ghana',away:'Panama',homeLogo:'https://static.flashscore.com/res/image/data/xr80n8zB-8vfTQDSH.png',awayLogo:'https://static.flashscore.com/res/image/data/GjtXYjcM-6yXdouA1.png',date:'2026-06-18T06:00:00+07:00',end:'2026-06-18T08:15:00+07:00'},
+  {id:19,sport:'Football',league:'World Championship',round:'Round 1',home:'Uzbekistan',away:'Colombia',homeLogo:'https://static.flashscore.com/res/image/data/06K3E8fM-ABIAlQIr.png',awayLogo:'https://static.flashscore.com/res/image/data/Ymt6NG9r-C6kVdO5F.png',date:'2026-06-18T09:00:00+07:00',end:'2026-06-18T11:15:00+07:00'},
+  {id:20,sport:'Football',league:'World Championship',round:'Round 2',home:'Czech Republic',away:'South Africa',homeLogo:'https://static.flashscore.com/res/image/data/UH0CqZdM-b1xaMyVe.png',awayLogo:'https://static.flashscore.com/res/image/data/Kfq8aDCr-xQxQqqtQ.png',date:'2026-06-18T23:00:00+07:00',end:'2026-06-19T01:15:00+07:00'},
+]
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════════════════
+
+let filter = 'all'
+
+function status(m){
+  const n=new Date(),s=new Date(m.date),e=new Date(m.end)
+  return n>e?'end':n>=s?'live':'soon'
+}
+function fmt(d){return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════════════════════
+
+function render(){
+  const q=document.getElementById('q').value.toLowerCase().trim()
+  const l=document.getElementById('lFilter').value
+  let ms=MATCHES.filter(m=>{
+    if(filter==='live'&&status(m)!=='live')return false
+    if(l!=='all'&&m.league!==l)return false
+    if(q&&!m.home.toLowerCase().includes(q)&&!m.away.toLowerCase().includes(q))return false
+    return true
+  })
+  document.getElementById('mc').textContent=ms.length+' match'+(ms.length!==1?'es':'')
+  if(!ms.length){
+    document.getElementById('list').innerHTML='<div style="padding:40px;text-align:center;color:#555;font-size:.85rem">No matches</div>'
+    return
+  }
+  document.getElementById('list').innerHTML=ms.map(m=>{
+    const s=status(m)
+    const lbl=s==='live'?'LIVE':s==='soon'?'Upcoming':'Ended'
+    const cls=s==='live'?'live':s==='end'?'off':''
+    const slbl=s==='live'?'live-box':s==='soon'?'soon-box':'end-box'
+    const keys=MATCH_STREAMS[m.id]||[]
+    return `<div class="match ${cls}">
+      <div class="logos">
+        <img src="${m.homeLogo}" alt="${m.home}" loading="lazy">
+        <span class="vs">VS</span>
+        <img src="${m.awayLogo}" alt="${m.away}" loading="lazy">
+      </div>
+      <div class="info">
+        <h3>${m.home} vs ${m.away}</h3>
+        <div class="league">${m.league} – ${m.round}</div>
+        <div class="time">${fmt(m.date)}</div>
+        <span class="status ${slbl}">${lbl}</span>
+        ${keys.length?`<div class="channels">${keys.slice(0,4).map(k=>{
+          const s=STREAMS[k]||DEFAULT_STREAM
+          return `<span onclick="event.stopPropagation();openStream('${s.url}')">${s.label}</span>`
+        }).join('')}</div>`:''}
+      </div>
+      ${s!=='end'?`<button class="watch-btn" onclick="event.stopPropagation();openMatch(${m.id})">Watch</button>`:''}
+    </div>`
+  }).join('')
+}
+
+function setFilter(f){
+  filter=f
+  document.querySelectorAll('.nav-btns button').forEach(b=>b.classList.remove('on'))
+  document.getElementById(f==='all'?'fbAll':'fbLive').classList.add('on')
+  render()
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PLAYER — Opens in new tab
+// ═══════════════════════════════════════════════════════════════════════════
+
+function openStream(url){
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+function openMatch(id){
+  const m=MATCHES.find(x=>x.id===id)
+  if(!m)return
+  document.getElementById('modalTitle').textContent=m.home+' vs '+m.away
+  const keys=MATCH_STREAMS[id]||[]
+  const c=document.getElementById('modalStreams')
+  if(!keys.length){
+    c.innerHTML=`<button class="sbtn" onclick="window.open('${DEFAULT_STREAM.url}','_blank','noopener,noreferrer')"><span class="lang">Watch</span></button>`
+  }else{
+    c.innerHTML=keys.map(k=>{
+      const s=STREAMS[k]||DEFAULT_STREAM
+      return `<button class="sbtn" onclick="window.open('${s.url}','_blank','noopener,noreferrer')"><span class="lang">${s.label}</span></button>`
+    }).join('')
+  }
+  document.getElementById('modal').classList.add('show')
+}
+
+function closeModal(){
+  document.getElementById('modal').classList.remove('show')
+}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()})
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()})
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  LEAGUE FILTER
+// ═══════════════════════════════════════════════════════════════════════════
+
+const leagues=[...new Set(MATCHES.map(m=>m.league))]
+const sel=document.getElementById('lFilter')
+leagues.forEach(l=>{const o=document.createElement('option');o.value=l;o.textContent=l;sel.appendChild(o)})
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════════════════
+
+render()
+setInterval(render,30000)
+</script>
+</body>
+</html>
